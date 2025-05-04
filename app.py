@@ -1,13 +1,11 @@
 import streamlit as st
-from fastapi import FastAPI
-from pydantic import BaseModel
 import json
 import os
-from starlette.responses import FileResponse
-from streamlit.web.server.websocket_headers import _get_websocket_headers
-
-# Initialize FastAPI app
-app = FastAPI()
+from streamlit.web.server import Server
+from streamlit.runtime.scriptrunner import get_script_run_ctx
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import threading
+import urllib.parse
 
 # Path to JSON file
 BLOCKS_FILE = "blocks.json"
@@ -24,61 +22,78 @@ def init_blocks():
 
 init_blocks()
 
-# Pydantic model for block data
-class Block(BaseModel):
-    name: str
-    phone: str
-    email: str
-    services: str
-    rating: int
+# HTTP server to handle API requests
+class APIHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/get_blocks':
+            try:
+                with open(BLOCKS_FILE, "r") as f:
+                    data = json.load(f)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(data).encode())
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(f"Error: {str(e)}".encode())
+        else:
+            self.send_response(404)
+            self.end_headers()
 
-class BlockRequest(BaseModel):
-    block: Block
-    index: int | None
+    def do_POST(self):
+        if self.path == '/save_block':
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                request = json.loads(post_data.decode())
+                block = request['block']
+                index = request['index']
 
-# FastAPI endpoints
-@app.get("/api/blocks")
-async def get_blocks():
-    with open(BLOCKS_FILE, "r") as f:
-        return json.load(f)
+                with open(BLOCKS_FILE, "r") as f:
+                    data = json.load(f)
+                
+                if index is not None and 0 <= index < len(data["blocks"]):
+                    data["blocks"][index] = block
+                else:
+                    data["blocks"].append(block)
+                
+                with open(BLOCKS_FILE, "w") as f:
+                    json.dump(data, f)
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "success"}).encode())
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(f"Error: {str(e)}".encode())
+        else:
+            self.send_response(404)
+            self.end_headers()
 
-@app.post("/api/blocks")
-async def save_block(request: BlockRequest):
-    with open(BLOCKS_FILE, "r") as f:
-        data = json.load(f)
-    
-    if request.index is not None and 0 <= request.index < len(data["blocks"]):
-        data["blocks"][request.index] = request.block.dict()
-    else:
-        data["blocks"].append(request.block.dict())
-    
-    with open(BLOCKS_FILE, "w") as f:
-        json.dump(data, f)
-    
-    return {"status": "success"}
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
 
-# Serve index.html
-@app.get("/")
-async def serve_index():
-    return FileResponse("index.html")
+# Start HTTP server in a separate thread
+def start_api_server():
+    server = HTTPServer(('0.0.0.0', 8000), APIHandler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+
+# Run API server
+start_api_server()
 
 # Streamlit app
-def run_streamlit():
-    st.set_page_config(page_title="Company Information Directory", layout="wide")
-    
-    # Get FastAPI URL for client-side fetch
-    headers = _get_websocket_headers()
-    host = headers.get("Host", "localhost:8501")
-    api_url = f"http://{host}"
-    
-    # Render index.html
-    with open("index.html", "r") as file:
-        html_content = file.read()
-    st.components.v1.html(html_content, height=1000, scrolling=True)
+st.set_page_config(page_title="Company Information Directory", layout="wide")
 
-if __name__ == "__main__":
-    import uvicorn
-    # Run FastAPI with Streamlit
-    uvicorn.run(app, host="0.0.0.0", port=8501)
-else:
-    run_streamlit()
+# Render index.html
+with open("index.html", "r") as file:
+    html_content = file.read()
+st.components.v1.html(html_content, height=1000, scrolling=True)
