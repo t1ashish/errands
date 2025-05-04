@@ -3,31 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Company Information Blocks</title>
+    <title>Company Information Directory</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e40af;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .search-box {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            color: #1e293b;
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.2s;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
             padding: 1rem;
         }
         .block {
-            border: 1px solid #e5e7eb;
-            padding: 1rem;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
             border-radius: 0.5rem;
-            background-color: #f9fafb;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .block h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 1rem;
+        }
+        .block p {
+            font-size: 0.95rem;
+            color: #475569;
+            margin-bottom: 0.5rem;
+        }
+        .block p strong {
+            color: #1e293b;
+        }
+        .block button {
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            margin-right: 0.5rem;
+            margin-top: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        .edit-btn {
+            background-color: #1e40af;
+            color: #ffffff;
+        }
+        .edit-btn:hover {
+            background-color: #1e3a8a;
+        }
+        .copy-btn {
+            background-color: #10b981;
+            color: #ffffff;
+        }
+        .copy-btn:hover {
+            background-color: #059669;
         }
         .dialog-box {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
+            background: #ffffff;
             padding: 2rem;
             border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 1000;
+            width: 100%;
+            max-width: 500px;
         }
         .overlay {
             position: fixed;
@@ -38,22 +121,101 @@
             background: rgba(0, 0, 0, 0.5);
             z-index: 999;
         }
+        .dialog-box h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 1.5rem;
+        }
+        .dialog-box label {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #1e293b;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .dialog-box input,
+        .dialog-box textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            font-size: 0.95rem;
+            color: #1e293b;
+            background-color: #f8fafc;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+        }
+        .dialog-box input:focus,
+        .dialog-box textarea:focus {
+            outline: none;
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        .dialog-box textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .dialog-box button {
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            margin-right: 0.5rem;
+        }
+        .submit-btn {
+            background-color: #1e40af;
+            color: #ffffff;
+        }
+        .submit-btn:hover {
+            background-color: #1e3a8a;
+        }
+        .cancel-btn {
+            background-color: #e2e8f0;
+            color: #1e293b;
+        }
+        .cancel-btn:hover {
+            background-color: #cbd5e1;
+        }
+        .star-rating {
+            display: inline-flex;
+            direction: rtl;
+            margin-bottom: 1rem;
+        }
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            font-size: 1.5rem;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label {
+            color: #f59e0b;
+        }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4 text-center">Company Information Blocks</h1>
+<body>
+    <div class="container">
+        <h1>Company Information Directory</h1>
+        <div class="search-box">
+            <input type="text" id="search" placeholder="Search by name, phone, email, or services...">
+        </div>
         <div id="grid" class="grid-container"></div>
     </div>
 
     <script>
         // Initialize blocks data
-        const numBlocks = 6; // Adjust number of blocks as needed
+        const numBlocks = 6;
         let blocks = JSON.parse(localStorage.getItem('blocks')) || Array(numBlocks).fill(null).map(() => ({
             name: '',
             phone: '',
             email: '',
-            services: ''
+            services: '',
+            rating: 0
         }));
 
         // Save blocks to localStorage
@@ -62,21 +224,37 @@
         }
 
         // Render blocks
-        function renderBlocks() {
+        function renderBlocks(filter = '') {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
             blocks.forEach((block, index) => {
+                const searchString = `${block.name} ${block.phone} ${block.email} ${block.services}`.toLowerCase();
+                if (filter && !searchString.includes(filter.toLowerCase())) return;
+
                 const blockElement = document.createElement('div');
                 blockElement.className = 'block';
+                const baseUrl = window.location.origin + window.location.pathname;
+                const editLink = `${baseUrl}?editBlock=${index}`;
                 blockElement.innerHTML = `
-                    <h2 class="font-semibold">Block ${index + 1}</h2>
+                    <h2>Block ${index + 1}</h2>
                     <p><strong>Name:</strong> ${block.name || 'N/A'}</p>
                     <p><strong>Phone:</strong> ${block.phone || 'N/A'}</p>
                     <p><strong>Email:</strong> ${block.email || 'N/A'}</p>
                     <p><strong>Services:</strong> ${block.services || 'N/A'}</p>
-                    <button onclick="showDialog(${index})" class="text-blue-500 hover:underline">Edit Block ${index + 1}</button>
+                    <p><strong>Rating:</strong> ${block.rating ? '★'.repeat(block.rating) + '☆'.repeat(5 - block.rating) : 'N/A'}</p>
+                    <button onclick="showDialog(${index})" class="edit-btn">Edit Block</button>
+                    <button onclick="copyLink('${editLink}')" class="copy-btn">Copy Share Link</button>
                 `;
                 grid.appendChild(blockElement);
+            });
+        }
+
+        // Copy link to clipboard
+        function copyLink(link) {
+            navigator.clipboard.writeText(link).then(() => {
+                alert('Link copied to clipboard!');
+            }).catch(() => {
+                alert('Failed to copy link.');
             });
         }
 
@@ -89,26 +267,31 @@
             const dialog = document.createElement('div');
             dialog.className = 'dialog-box';
             dialog.innerHTML = `
-                <h2 class="text-lg font-bold mb-4">Enter Details for Block ${blockIndex + 1}</h2>
+                <h2>Edit Block ${blockIndex + 1}</h2>
                 <form id="blockForm">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium">Company Name</label>
-                        <input type="text" id="name" class="w-full p-2 border rounded" value="${blocks[blockIndex].name}">
+                    <label>Company Name</label>
+                    <input type="text" id="name" value="${blocks[blockIndex].name}">
+                    <label>Phone Number</label>
+                    <input type="tel" id="phone" value="${blocks[blockIndex].phone}">
+                    <label>Email</label>
+                    <input type="email" id="email" value="${blocks[blockIndex].email}">
+                    <label>Services</label>
+                    <textarea id="services">${blocks[blockIndex].services}</textarea>
+                    <label>Rating</label>
+                    <div class="star-rating">
+                        <input type="radio" id="star5-${blockIndex}" name="rating" value="5" ${blocks[blockIndex].rating === 5 ? 'checked' : ''}>
+                        <label for="star5-${blockIndex}">★</label>
+                        <input type="radio" id="star4-${blockIndex}" name="rating" value="4" ${blocks[blockIndex].rating === 4 ? 'checked' : ''}>
+                        <label for="star4-${blockIndex}">★</label>
+                        <input type="radio" id="star3-${blockIndex}" name="rating" value="3" ${blocks[blockIndex].rating === 3 ? 'checked' : ''}>
+                        <label for="star3-${blockIndex}">★</label>
+                        <input type="radio" id="star2-${blockIndex}" name="rating" value="2" ${blocks[blockIndex].rating === 2 ? 'checked' : ''}>
+                        <label for="star2-${blockIndex}">★</label>
+                        <input type="radio" id="star1-${blockIndex}" name="rating" value="1" ${blocks[blockIndex].rating === 1 ? 'checked' : ''}>
+                        <label for="star1-${blockIndex}">★</label>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium">Phone Number</label>
-                        <input type="tel" id="phone" class="w-full p-2 border rounded" value="${blocks[blockIndex].phone}">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium">Email</label>
-                        <input type="email" id="email" class="w-full p-2 border rounded" value="${blocks[blockIndex].email}">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium">Services</label>
-                        <textarea id="services" class="w-full p-2 border rounded">${blocks[blockIndex].services}</textarea>
-                    </div>
-                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Submit</button>
-                    <button type="button" id="cancel" class="ml-2 bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="submit-btn">Submit</button>
+                    <button type="button" id="cancel" class="cancel-btn">Cancel</button>
                 </form>
             `;
             document.body.appendChild(dialog);
@@ -116,16 +299,18 @@
             // Handle form submission
             document.getElementById('blockForm').onsubmit = (e) => {
                 e.preventDefault();
+                const rating = document.querySelector(`input[name="rating"]:checked`)?.value || 0;
                 blocks[blockIndex] = {
                     name: document.getElementById('name').value,
                     phone: document.getElementById('phone').value,
                     email: document.getElementById('email').value,
-                    services: document.getElementById('services').value
+                    services: document.getElementById('services').value,
+                    rating: parseInt(rating)
                 };
                 saveBlocks();
                 document.body.removeChild(dialog);
                 document.body.removeChild(overlay);
-                renderBlocks();
+                renderBlocks(document.getElementById('search').value);
             };
 
             // Handle cancel
@@ -133,6 +318,19 @@
                 document.body.removeChild(dialog);
                 document.body.removeChild(overlay);
             };
+        }
+
+        // Handle search
+        document.getElementById('search').addEventListener('input', (e) => {
+            renderBlocks(e.target.value);
+        });
+
+        // Check URL for editBlock parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const blockIndex = parseInt(urlParams.get('editBlock'));
+        if (!isNaN(blockIndex) && blockIndex >= 0 && blockIndex < numBlocks) {
+            showDialog(blockIndex);
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
 
         // Initial render
