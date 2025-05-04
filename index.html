@@ -68,14 +68,13 @@
             blocks.forEach((block, index) => {
                 const blockElement = document.createElement('div');
                 blockElement.className = 'block';
-                const uniqueLink = `${window.location.href}?block=${index}`;
                 blockElement.innerHTML = `
                     <h2 class="font-semibold">Block ${index + 1}</h2>
                     <p><strong>Name:</strong> ${block.name || 'N/A'}</p>
                     <p><strong>Phone:</strong> ${block.phone || 'N/A'}</p>
                     <p><strong>Email:</strong> ${block.email || 'N/A'}</p>
                     <p><strong>Services:</strong> ${block.services || 'N/A'}</p>
-                    <a href="${uniqueLink}" class="text-blue-500 hover:underline" target="_blank">Edit Block ${index + 1}</a>
+                    <button onclick="showDialog(${index})" class="text-blue-500 hover:underline">Edit Block ${index + 1}</button>
                 `;
                 grid.appendChild(blockElement);
             });
@@ -134,13 +133,6 @@
                 document.body.removeChild(dialog);
                 document.body.removeChild(overlay);
             };
-        }
-
-        // Check URL for block parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const blockIndex = parseInt(urlParams.get('block'));
-        if (!isNaN(blockIndex) && blockIndex >= 0 && blockIndex < numBlocks) {
-            showDialog(blockIndex);
         }
 
         // Initial render
