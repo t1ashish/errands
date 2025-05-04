@@ -1,6 +1,11 @@
 import streamlit as st
 import json
 import os
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Path to JSON file
 BLOCKS_FILE = "blocks.json"
@@ -12,8 +17,12 @@ def init_blocks():
             {"name": "", "phone": "", "email": "", "services": "", "rating": 0}
             for _ in range(6)
         ]
-        with open(BLOCKS_FILE, "w") as f:
-            json.dump({"blocks": default_blocks}, f)
+        try:
+            with open(BLOCKS_FILE, "w") as f:
+                json.dump({"blocks": default_blocks}, f)
+            logger.info("Initialized blocks.json with default blocks")
+        except Exception as e:
+            logger.error(f"Failed to initialize blocks.json: {str(e)}")
 
 init_blocks()
 
@@ -26,41 +35,56 @@ def handle_api():
         try:
             with open(BLOCKS_FILE, "r") as f:
                 data = json.load(f)
+            logger.info("Successfully fetched blocks")
             st.json(data)
         except Exception as e:
+            logger.error(f"Error fetching blocks: {str(e)}")
             st.json({"error": str(e)})
         return True
 
     elif action == "save_block":
         try:
-            # Handle POST data (Streamlit doesn't directly support POST, so we use session state)
-            if "post_data" in st.session_state:
+            # Handle POST data via session state
+            if "post_data" in st.session_state and st.session_state.post_data:
                 request = st.session_state.post_data
+                logger.debug(f"Received POST data: {request}")
                 block = request["block"]
                 index = request["index"]
+
+                # Validate block data
+                if not isinstance(block, dict):
+                    raise ValueError("Invalid block data")
+                required_fields = ["name", "phone", "email", "services", "rating"]
+                if not all(field in block for field in required_fields):
+                    raise ValueError("Missing required fields")
 
                 with open(BLOCKS_FILE, "r") as f:
                     data = json.load(f)
 
                 if index is not None and 0 <= index < len(data["blocks"]):
                     data["blocks"][index] = block
+                    logger.info(f"Updated block at index {index}")
                 else:
                     data["blocks"].append(block)
+                    logger.info("Appended new block")
 
                 with open(BLOCKS_FILE, "w") as f:
                     json.dump(data, f)
 
                 st.json({"status": "success"})
                 del st.session_state.post_data
+                logger.info("Successfully saved block")
             else:
+                logger.warning("No POST data received")
                 st.json({"error": "No POST data received"})
         except Exception as e:
+            logger.error(f"Error saving block: {str(e)}")
             st.json({"error": str(e)})
         return True
 
     return False
 
-# Simulate POST handling via session state
+# Initialize session state
 if "post_data" not in st.session_state:
     st.session_state.post_data = None
 
@@ -72,20 +96,31 @@ if handle_api():
 st.set_page_config(page_title="Company Information Directory", layout="wide")
 
 # Render index.html
-with open("index.html", "r") as file:
-    html_content = file.read()
-st.components.v1.html(html_content, height=1000, scrolling=True)
+try:
+    with open("index.html", "r") as file:
+        html_content = file.read()
+    st.components.v1.html(html_content, height=1000, scrolling=True)
+except Exception as e:
+    logger.error(f"Error loading index.html: {str(e)}")
+    st.error("Failed to load the application. Please check the logs.")
 
-# Handle POST requests via JavaScript (workaround for Streamlit's lack of POST support)
+# Handle POST requests via JavaScript
 st.markdown("""
 <script>
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'streamlit_set_post_data') {
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(event.data.data)
+            }).then(response => response.json()).then(data => {
+                window.parent.postMessage({ type: 'streamlit_post', data: data }, '*');
+            });
+        }
+    });
+
     async function sendPostData(url, data) {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        window.parent.postMessage({ type: 'streamlit_post', data: await response.json() }, '*');
+        window.parent.postMessage({ type: 'streamlit_set_post_data', data: data }, '*');
     }
 </script>
 """, unsafe_allow_html=True)
@@ -96,5 +131,6 @@ if st.session_state.post_data is None:
     if post_data:
         try:
             st.session_state.post_data = json.loads(post_data)
-        except:
-            pass
+            logger.debug(f"Captured POST data from query params: {st.session_state.post_data}")
+        except Exception as e:
+            logger.error(f"Error parsing POST data: {str(e)}")
