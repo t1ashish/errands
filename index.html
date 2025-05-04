@@ -208,6 +208,9 @@
     </div>
 
     <script>
+        // Replace with your Streamlit app URL (e.g., https://your-app-name.streamlit.app)
+        const BASE_URL = 'https://errands-gw2mbyggadzxrwagvlz4dx.streamlit.app';
+
         // Initialize blocks data
         const numBlocks = 6;
         let blocks = JSON.parse(localStorage.getItem('blocks')) || Array(numBlocks).fill(null).map(() => ({
@@ -233,8 +236,7 @@
 
                 const blockElement = document.createElement('div');
                 blockElement.className = 'block';
-                const baseUrl = window.location.origin + window.location.pathname;
-                const editLink = `${baseUrl}?editBlock=${index}`;
+                const editLink = `${BASE_URL}?editBlock=${index}`;
                 blockElement.innerHTML = `
                     <h2>Block ${index + 1}</h2>
                     <p><strong>Name:</strong> ${block.name || 'N/A'}</p>
@@ -252,9 +254,9 @@
         // Copy link to clipboard
         function copyLink(link) {
             navigator.clipboard.writeText(link).then(() => {
-                alert('Link copied to clipboard!');
+                alert('Link copied to clipboard! Paste it in a browser to edit the block.');
             }).catch(() => {
-                alert('Failed to copy link.');
+                alert('Failed to copy link. Please copy it manually: ' + link);
             });
         }
 
